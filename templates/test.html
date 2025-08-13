@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <script>
+    const socket = new WebSocket("ws://192.168.100.124:5000");
+    socket.onopen = () => console.log("Connected!");
+    socket.onerror = (e) => console.log("Error:", e);
+    socket.onmessage = (e) => console.log("Message:", e.data);
+  </script>
+</body>
+</html>

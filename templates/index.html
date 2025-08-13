@@ -1,139 +1,324 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Live Detection Page</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #f0f2f5;
-            color: #333;
-        }
+{% extends "base.html" %}
 
-        header, footer {
-            background-color: #1e1e2f;
-            color: white;
-            text-align: center;
-            padding: 1rem;
-        }
+{% block title %}Live Detection Page{% endblock %}
 
-        .main-wrapper {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            padding: 1rem;
-            max-width: 1200px;
-            margin: auto;
-        }
+{% block content %}
+<style>
+    body {
+        margin: 0;
+        font-family: 'Segoe UI', sans-serif;
+        background-color: #f0f2f5;
+        color: #333;
+    }
 
-        .video-container {
-            flex: 1 1 65%;
-            background: black;
-            border-radius: 8px;
-            overflow: hidden;
-            min-width: 300px;
-        }
+    header, footer {
+        background-color: #1e1e2f;
+        color: white;
+        text-align: center;
+        padding: 1rem;
+    }
 
-        .video-container img, 
-        .video-container video {
-            width: 100%;
-            display: block;
-        }
+    header h1 {
+        margin: 0;
+        font-size: 1.8rem;
+    }
 
-        .sidebar {
-            flex: 1 1 30%;
-            background: white;
-            padding: 1rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-            min-width: 250px;
-        }
+    header p {
+        margin: 0.2rem 0 0;
+        font-size: 1rem;
+        opacity: 0.8;
+    }
 
-        .status {
-            padding: 0.75rem;
-            border-radius: 5px;
-            margin-bottom: 1rem;
-            text-align: center;
-            font-weight: bold;
-        }
+    .main-wrapper {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        padding: 1rem;
+        max-width: 1400px;
+        margin: auto;
+    }
 
-        .barcode-detected {
-            background-color: #28a745;
-            color: white;
-            animation: pulse 1.5s infinite;
-        }
+    .video-container {
+        flex: 1 1 65%;
+        background: black;
+        border-radius: 8px;
+        overflow: hidden;
+        min-width: 300px;
+        position: relative;
+    }
 
-        .barcode-waiting {
-            background-color: #f39c12;
-            color: white;
-        }
+    .video-container img,
+    .video-container video {
+        width: 100%;
+        display: block;
+    }
 
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
-        }
+    .camera-off-placeholder {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 2rem;
+        font-size: 1.2rem;
+        border-radius: 8px;
+        display: none;
+    }
 
-        h2, h3 {
-            margin-top: 0;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 0.5rem;
-        }
+    .sidebar {
+        flex: 1 1 30%;
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        min-width: 280px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
 
-        ul {
-            list-style: none;
-            padding-left: 0;
-        }
+    .camera-controls {
+        margin-bottom: 1rem;
+        text-align: center;
+    }
 
-        li {
-            border-bottom: 1px solid #eee;
-            padding: 0.5rem 0;
-        }
-    </style>
-</head>
-<body>
+    .btn {
+        background-color: #1e1e2f;
+        color: white;
+        border: none;
+        padding: 0.6rem 1rem;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        width: 100%;
+        font-size: 1rem;
+    }
+
+    .btn:hover {
+        background-color: #3a3a5a;
+    }
+
+    .btn:active {
+        background-color: #0e0e1a;
+    }
+
+    .btn-danger {
+        background-color: #dc3545;
+    }
+
+    .status {
+        padding: 0.75rem;
+        border-radius: 5px;
+        margin-bottom: 1rem;
+        text-align: center;
+        font-weight: bold;
+    }
+
+    .barcode-detected {
+        background-color: #28a745;
+        color: white;
+        animation: pulse 1.5s infinite;
+    }
+
+    .barcode-waiting {
+        background-color: #f39c12;
+        color: white;
+    }
+
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+    }
+
+    h2, h3 {
+        margin-top: 0;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 0.5rem;
+        font-size: 1.2rem;
+    }
+
+    .qr-indicator {
+        color: blue;
+        margin-right: 1rem;
+    }
+
+    .barcode-indicator {
+        color: green;
+    }
+
+    .code-types {
+        margin-bottom: 0.75rem;
+        font-size: 0.95rem;
+    }
+
+    .result-list {
+        list-style: none;
+        padding-left: 0;
+        margin: 0;
+    }
+
+    .result-list li {
+        background: #f8f9fa;
+        border-left: 5px solid #007bff;
+        padding: 0.5rem 0.75rem;
+        margin-bottom: 0.5rem;
+        border-radius: 4px;
+        font-size: 0.95rem;
+    }
+
+    .result-list li:nth-child(even) {
+        background-color: #eef1f4;
+    }
+
+    .status-box {
+        background: #f0f0f0;
+        padding: 0.5rem;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        color: #555;
+        box-shadow: inset 0 0 3px rgba(0,0,0,0.05);
+        margin-top: 1rem;
+    }
+
+    /* Chat styles */
+    .chat-container {
+        margin-top: 1rem;
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .chat-message {
+        margin-bottom: 0.5rem;
+        padding: 0.5rem;
+        border-radius: 5px;
+        background-color: #f8f9fa;
+    }
+    
+    .chat-message-header {
+        font-weight: bold;
+        margin-bottom: 0.2rem;
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.85rem;
+    }
+    
+    .chat-input {
+        display: flex;
+        margin-top: 0.5rem;
+    }
+    
+    .chat-input input {
+        flex-grow: 1;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 5px 0 0 5px;
+        font-size: 0.9rem;
+    }
+    
+    .chat-input button {
+        padding: 0.5rem 1rem;
+        background-color: #1e1e2f;
+        color: white;
+        border: none;
+        border-radius: 0 5px 5px 0;
+        cursor: pointer;
+        font-size: 0.9rem;
+    }
+    
+    .current-user {
+        background-color: #e3f2fd;
+        border-left-color: #1e1e2f;
+    }
+</style>
 
 <header>
-    <h1>🎥 Live Object & Barcode Detection</h1>
+    <h1>🔍 Live Detection System</h1>
+    <p>YOLO + Barcode/QR Scanner Integration</p>
 </header>
+
+<h2>Welcome, {{ current_user.first_name }}</h2>
+
+<div class="camera-controls">
+    <button id="toggle-camera" class="btn">
+        <span id="camera-status-text">🔴 Turn Camera Off</span>
+    </button>
+</div>
 
 <main class="main-wrapper">
     <div class="video-container">
-        <img src="{{ url_for('video') }}" alt="Live Feed">
+        <img id="live-feed" src="{{ url_for('video') }}" alt="Live Feed">
+        <div id="camera-off-placeholder" class="camera-off-placeholder">
+            <div>
+                <h2>📷 Camera Off</h2>
+                <p>Please turn on the camera to start scanning.</p>
+            </div>
+        </div>
     </div>
 
     <div class="sidebar">
         <div id="barcode-status" class="status barcode-waiting">
-            Waiting for barcode...
+            ⏳ Waiting for codes...
         </div>
 
-        <div>
-            <h2>📦 Barcode Info</h2>
-            <ul id="barcode-list">
-                <li>No barcodes detected</li>
+        <section>
+            <h3>📦 Code Scanner Results</h3>
+            <div class="code-types">
+                <span class="qr-indicator">🔵 QR Codes</span>
+                <span class="barcode-indicator">🟢 Barcodes</span>
+            </div>
+            <ul id="barcode-list" class="result-list">
+                <li>No codes detected</li>
             </ul>
-        </div>
+        </section>
 
-        <div>
-            <h2>🔎 Object Detections</h2>
-            <ul id="detection-list">
+        <section>
+            <h3>🎯 Object Detections</h3>
+            <ul id="detection-list" class="result-list">
                 <li>Loading...</li>
             </ul>
-        </div>
+        </section>
 
-        <p><strong>🧠 Model:</strong> YOLOv8n</p>
-        <p>📊 <strong>FPS:</strong> <span id="fps">--</span></p>
+        <section>
+            <h3>👥 Active Users</h3>
+            <ul id="active-users-list" class="result-list">
+                <li>Loading...</li>
+            </ul>
+        </section>
+
+        <section class="chat-container">
+            <h3>💬 Live Chat</h3>
+            <div id="chat-messages">
+                <div class="chat-message">Loading chat...</div>
+            </div>
+            <div class="chat-input">
+                <input type="text" id="chat-input" placeholder="Type your message...">
+                <button id="send-chat">Send</button>
+            </div>
+        </section>
+
+        <section class="status-box">
+            <p><strong>🧠 Model:</strong> <code>YOLOv8n</code></p>
+            <p><strong>📊 FPS:</strong> <span id="fps">--</span></p>
+        </section>
     </div>
 </main>
-
-<footer>
-    <p>Powered by YOLOv8 & ZBar | &copy; 2025</p>
-</footer>
 
 <audio id="beep" src="{{ url_for('static', filename='beep.mp3') }}" preload="auto"></audio>
 
 <script>
+    // Combined JavaScript from all versions with improvements
+    
+    // Detection and camera functions
     async function fetchDetections() {
         try {
             const response = await fetch('/detections');
@@ -159,20 +344,21 @@
                 });
             }
 
-            // Update barcode detections
+            // Update barcode/QR code list
             barcodeList.innerHTML = '';
             if (data.barcodes.length === 0) {
-                barcodeList.innerHTML = '<li>No barcodes detected</li>';
-                barcodeStatus.textContent = 'Waiting for barcode...';
+                barcodeList.innerHTML = '<li>No codes detected</li>';
+                barcodeStatus.textContent = '⏳ Waiting for codes...';
                 barcodeStatus.className = 'status barcode-waiting';
             } else {
                 document.getElementById('beep').play();
-                data.barcodes.forEach(barcode => {
+                data.barcodes.forEach(code => {
                     const li = document.createElement('li');
-                    li.textContent = `${barcode.type}: ${barcode.data}`;
+                    li.textContent = `${code.type}: ${code.data}`;
+                    li.style.color = code.type === 'QRCODE' ? 'blue' : 'green';
                     barcodeList.appendChild(li);
                 });
-                barcodeStatus.textContent = '✅ Barcode Detected!';
+                barcodeStatus.textContent = '✅ Code Detected!';
                 barcodeStatus.className = 'status barcode-detected';
             }
 
@@ -181,8 +367,138 @@
         }
     }
 
-    setInterval(fetchDetections, 1000);
-</script>
+    // Camera toggle
+    const toggleCameraBtn = document.getElementById('toggle-camera');
+    const cameraStatusText = document.getElementById('camera-status-text');
+    const liveFeed = document.getElementById('live-feed');
+    const placeholder = document.getElementById('camera-off-placeholder');
 
-</body>
-</html>
+    async function checkCameraStatus() {
+        try {
+            const response = await fetch('/camera/status');
+            const data = await response.json();
+            updateCameraButton(data.active);
+        } catch (err) {
+            console.error('Failed to check camera status:', err);
+        }
+    }
+
+    function updateCameraButton(isActive) {
+        if (isActive) {
+            cameraStatusText.textContent = '🔴 Turn Camera Off';
+            toggleCameraBtn.classList.remove('btn-danger');
+            liveFeed.style.display = 'block';
+            placeholder.style.display = 'none';
+        } else {
+            cameraStatusText.textContent = '🟢 Turn Camera On';
+            toggleCameraBtn.classList.add('btn-danger');
+            liveFeed.style.display = 'none';
+            placeholder.style.display = 'flex';
+        }
+    }
+
+    toggleCameraBtn.addEventListener('click', async () => {
+        try {
+            const response = await fetch('/camera/toggle', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            const data = await response.json();
+            updateCameraButton(data.active);
+        } catch (err) {
+            console.error('Failed to toggle camera:', err);
+        }
+    });
+
+    // Active users tracking
+    function updateActiveUsers() {
+        fetch('/active_users')
+            .then(response => response.json())
+            .then(users => {
+                const list = document.getElementById('active-users-list');
+                list.innerHTML = '';
+                if (users.length === 0) {
+                    list.innerHTML = '<li>No other active users</li>';
+                } else {
+                    users.forEach(user => {
+                        const li = document.createElement('li');
+                        li.textContent = user.name;
+                        list.appendChild(li);
+                    });
+                }
+            })
+            .catch(err => console.error('Failed to fetch active users:', err));
+    }
+
+    // Chat functionality
+    const chatMessages = document.getElementById('chat-messages');
+    const chatInput = document.getElementById('chat-input');
+    const sendChatBtn = document.getElementById('send-chat');
+
+    function scrollChatToBottom() {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function updateChat() {
+        fetch('/chat/messages')
+            .then(response => response.json())
+            .then(messages => {
+                chatMessages.innerHTML = '';
+                messages.forEach(msg => {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `chat-message ${msg.user_id === '{{ current_user.user_id }}' ? 'current-user' : ''}`;
+                    
+                    const header = document.createElement('div');
+                    header.className = 'chat-message-header';
+                    header.innerHTML = `<span>${msg.name}</span><span>${msg.timestamp}</span>`;
+                    
+                    const content = document.createElement('div');
+                    content.textContent = msg.message;
+                    
+                    messageDiv.appendChild(header);
+                    messageDiv.appendChild(content);
+                    chatMessages.appendChild(messageDiv);
+                });
+                scrollChatToBottom();
+            })
+            .catch(err => console.error('Failed to fetch chat messages:', err));
+    }
+
+    function sendMessage() {
+        const message = chatInput.value.trim();
+        if (message) {
+            fetch('/chat/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `message=${encodeURIComponent(message)}`
+            })
+            .then(response => {
+                if (response.ok) {
+                    chatInput.value = '';
+                    updateChat();
+                }
+            })
+            .catch(err => console.error('Failed to send message:', err));
+        }
+    }
+
+    sendChatBtn.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+    // Initialize everything
+    checkCameraStatus();
+    setInterval(fetchDetections, 1000);
+    setInterval(updateChat, 2000);
+    setInterval(updateActiveUsers, 5000);
+    updateChat(); // Initial load
+    updateActiveUsers(); // Initial load
+</script>
+{% endblock %}
